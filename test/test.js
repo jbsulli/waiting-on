@@ -22,13 +22,13 @@ describe('WaitingOn', function(){
             expect(wait.holdup()).to.equal(10);
         });
         
-        it('should add all string arguments as process names needing to be finished', function(){
+        it('should add all string arguments as event names needing to be finished', function(){
             var wait = new WaitingOn('a','b','c');
             expect(wait).to.be.instanceof(WaitingOn);
             expect(wait.holdup().sort()).to.deep.equal(['a','b','c']);
         });
         
-        it('should be able to take a number followed by process names', function(){
+        it('should be able to take a number followed by event names', function(){
             var wait = new WaitingOn(2, 'a','b','c');
             expect(wait).to.be.instanceof(WaitingOn);
             expect(wait.holdup().sort()).to.deep.equal(['a','b','c']);
@@ -73,7 +73,7 @@ describe('WaitingOn', function(){
     });
     
     describe('.after()', function(){
-        it('should setup processes to watch for and call the callback whent those processes are done', function(done){
+        it('should setup events to watch for and call the callback whent those events are done', function(done){
             var wait = waitingOn('a', 'b', 'c');
             var step = 0;
             
@@ -93,7 +93,7 @@ describe('WaitingOn', function(){
             });
         });
         
-        it('should be able to listen for multiple processes to finish', function(done){
+        it('should be able to listen for multiple events to finish', function(done){
             var wait = waitingOn('a', 'b', 'c');
             var step = 0;
             
@@ -114,11 +114,11 @@ describe('WaitingOn', function(){
             }, 50);
         });
         
-        it('should gracefully handle duplicate processes in the list of processes to wait for', function(done){
+        it('should gracefully handle duplicate events in the list of events to wait for', function(done){
             var wait = waitingOn('a', 'b');
             var step = 0;
             
-            // two 'b' processes
+            // two 'b' events
             wait.after('a', 'b', 'b', () => {
                 step++;
             });
@@ -130,7 +130,7 @@ describe('WaitingOn', function(){
             });
         });
         
-        it('should be able to listen for multiple processes finishing at the same time', function(done){
+        it('should be able to listen for multiple events finishing at the same time', function(done){
             var wait = waitingOn('a', 'b', 'c');
             var step = 0;
             
@@ -147,7 +147,7 @@ describe('WaitingOn', function(){
             });
         });
         
-        it('should be able to handle multiple listeners for multiple processes', function(done){
+        it('should be able to handle multiple listeners for multiple events', function(done){
             var wait = waitingOn('a', 'b', 'c');
             var step = 0;
             
@@ -199,11 +199,11 @@ describe('WaitingOn', function(){
             });
         });
         
-        it('should require a process name and callback function', function(){
+        it('should require an event name and callback function', function(){
             expect(() => waitingOn().after()).to.throw(Error, /^Callback function is required$/);
             expect(() => waitingOn('a').after()).to.throw(Error, /^Callback function is required$/);
-            expect(() => waitingOn().after(function(){})).to.throw(Error, /^Missing process to wait for$/);
-            expect(() => waitingOn().after(function(){}, function(){})).to.throw(Error, /^Missing process to wait for$/);
+            expect(() => waitingOn().after(function(){})).to.throw(Error, /^Missing event to wait for$/);
+            expect(() => waitingOn().after(function(){}, function(){})).to.throw(Error, /^Missing event to wait for$/);
         });
         
         it('should catch thrown errors in the callback', function(done){
@@ -226,10 +226,10 @@ describe('WaitingOn', function(){
     });
     
     describe('.any()', function(){
-        it('should tell you if we are waiting on any of the passed processes', function(done){
+        it('should tell you if we are waiting on any of the passed events', function(done){
             var wait = waitingOn();
             expect(wait.any('a')).to.equal(false);
-            wait.processes('a','b','c');
+            wait.events('a','b','c');
             wait.finally(errors => {
                 expect(errors).to.equal(undefined);
                 expect(wait.any('a','b','c')).to.equal(false);
@@ -331,9 +331,9 @@ describe('WaitingOn', function(){
     });
     
     describe('.finished()', function(){
-        it('should throw an error given an unknown process', function(){
-            expect(() => waitingOn().finished('a')).to.throw(Error, /^Unknown process finished\. \[a\]$/);
-            expect(() => waitingOn('b').finished('a')).to.throw(Error, /^Unknown process finished\. \[a\]$/);
+        it('should throw an error given an unknown event', function(){
+            expect(() => waitingOn().finished('a')).to.throw(Error, /^Unknown event finished\. \[a\]$/);
+            expect(() => waitingOn('b').finished('a')).to.throw(Error, /^Unknown event finished\. \[a\]$/);
         });
         
         it('should be chainable', function(){
@@ -353,12 +353,12 @@ describe('WaitingOn', function(){
         });
     });
     
-    describe('.process()', function(){
-        it('should register a process we are waiting on and return a function that will call our callback and then call finished with our process name', function(done){
+    describe('.event()', function(){
+        it('should register an event we are waiting on and return a function that will call our callback and then call finished with our event name', function(done){
             var wait = waitingOn();
             var callback_called = false;
             
-            setTimeout(wait.process('timer', () => {
+            setTimeout(wait.event('timer', () => {
                 callback_called = true;
                 // should still be holding things up until after the callback returns
                 expect(wait.holdup()).to.deep.equal(['timer']);
@@ -377,7 +377,7 @@ describe('WaitingOn', function(){
             var wait = waitingOn();
             var callback_called = false;
             
-            setTimeout(wait.process('timer', function(){
+            setTimeout(wait.event('timer', function(){
                 callback_called = true;
                 expect(wait).to.equal(wait);
             }, wait), 50);
@@ -393,7 +393,7 @@ describe('WaitingOn', function(){
             var wait = waitingOn();
             var err = new Error('bad stuff');
             
-            setTimeout(wait.process('timer', function(){
+            setTimeout(wait.event('timer', function(){
                 throw err;
             }, wait), 50);
             
@@ -405,10 +405,10 @@ describe('WaitingOn', function(){
         });
     });
     
-    describe('.processes()', function(){
+    describe('.events()', function(){
         it('should add proccesses to the wait list', function(done){
             var all_done = false;
-            var wait = waitingOn().processes('a', 'b').finally(errors => {
+            var wait = waitingOn().events('a', 'b').finally(errors => {
                 expect(errors).to.equal(undefined);
                 expect(all_done).to.equal(true);
                 done();
@@ -420,41 +420,41 @@ describe('WaitingOn', function(){
         });
         
         it('should be ok with no arguments', function(){
-            waitingOn().processes();
+            waitingOn().events();
         });
         
         it('should be not be ok with non-string or empty string arguments', function(){
-            var error_message = /^Process name must be a string with one or more characters$/;
-            expect(() => waitingOn().processes(undefined)).to.throw(Error, error_message);
-            expect(() => waitingOn().processes('')).to.throw(Error, error_message);
-            expect(() => waitingOn().processes(false)).to.throw(Error, error_message);
-            expect(() => waitingOn().processes(true)).to.throw(Error, error_message);
-            expect(() => waitingOn().processes([])).to.throw(Error, error_message);
-            expect(() => waitingOn().processes({})).to.throw(Error, error_message);
-            expect(() => waitingOn().processes(function(){})).to.throw(Error, error_message);
-            expect(() => waitingOn().processes(() => {})).to.throw(Error, error_message);
-            expect(() => waitingOn().processes(1)).to.throw(Error, error_message);
-            expect(() => waitingOn().processes(0)).to.throw(Error, error_message);
-            expect(() => waitingOn().processes(null)).to.throw(Error, error_message);
+            var error_message = /^Event name must be a string with one or more characters$/;
+            expect(() => waitingOn().events(undefined)).to.throw(Error, error_message);
+            expect(() => waitingOn().events('')).to.throw(Error, error_message);
+            expect(() => waitingOn().events(false)).to.throw(Error, error_message);
+            expect(() => waitingOn().events(true)).to.throw(Error, error_message);
+            expect(() => waitingOn().events([])).to.throw(Error, error_message);
+            expect(() => waitingOn().events({})).to.throw(Error, error_message);
+            expect(() => waitingOn().events(function(){})).to.throw(Error, error_message);
+            expect(() => waitingOn().events(() => {})).to.throw(Error, error_message);
+            expect(() => waitingOn().events(1)).to.throw(Error, error_message);
+            expect(() => waitingOn().events(0)).to.throw(Error, error_message);
+            expect(() => waitingOn().events(null)).to.throw(Error, error_message);
         });
         
         it('should not allow adding proccesses if finally has already been called', function(done){
             var wait = new WaitingOn();
             wait.finally(errors => {
                 expect(errors).to.equal(undefined);
-                expect(() => wait.processes('bad')).to.throw(Error, /^Finally already called\.$/);
+                expect(() => wait.events('bad')).to.throw(Error, /^Finally already called\.$/);
                 done();
             });
         });
         
         it('should be able to be called multiple times', function(){
-            var wait = waitingOn().processes('a', 'b', 'c');
-            wait.processes('d','e','f');
+            var wait = waitingOn().events('a', 'b', 'c');
+            wait.events('d','e','f');
             expect(wait.holdup().sort()).to.deep.equal(['a','b','c','d','e','f']);
         });
         
-        it('should allow multiple of the same process', function(){
-            var wait = waitingOn().processes('a', 'a', 'a');
+        it('should allow multiple of the same event', function(){
+            var wait = waitingOn().events('a', 'a', 'a');
             expect(wait.holdup()).to.deep.equal(['a']);
             wait.finished('a');
             expect(wait.holdup()).to.deep.equal(['a']);
@@ -464,7 +464,7 @@ describe('WaitingOn', function(){
         
         it('should be chainable', function(){
             var wait = waitingOn();
-            expect(wait.processes('test')).to.equal(wait);
+            expect(wait.events('test')).to.equal(wait);
         });
     });
     
@@ -489,7 +489,7 @@ describe('WaitingOn', function(){
             }, wait);
         });
         
-        it('should allow a new process/count after the finally is already scheduled for the next tick', function(done){
+        it('should allow a new event/count after the finally is already scheduled for the next tick', function(done){
             var wait = waitingOn(1);
             var second_task = false;
             

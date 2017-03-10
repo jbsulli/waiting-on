@@ -17,7 +17,7 @@ function WaitingOn(count_or_event){
     }
     
     if(args.length > 0){
-        this.processes.apply(this, args);
+        this.events.apply(this, args);
     }
 }
 
@@ -33,9 +33,9 @@ WaitingOn.prototype.add = function(count){
     return this;
 };
 
-WaitingOn.prototype.after = function(process_name, callback, thisArg){
-    if(!this.after_process){
-        this.after_process = {};
+WaitingOn.prototype.after = function(event_name, callback, thisArg){
+    if(!this.after_events){
+        this.after_events = {};
     }
     
     var events = Array.prototype.slice.call(arguments, 0);
@@ -51,7 +51,7 @@ WaitingOn.prototype.after = function(process_name, callback, thisArg){
         }
     } else {
         if(events.length < 1){
-            throw new Error('Missing process to wait for');
+            throw new Error('Missing event to wait for');
         }
         
         if(typeof events[events.length - 1] === 'function'){
@@ -61,16 +61,16 @@ WaitingOn.prototype.after = function(process_name, callback, thisArg){
     }
     
     if(events.length < 1){
-        throw new Error('Missing process to wait for');
+        throw new Error('Missing event to wait for');
     }
     
     var after = { events:events, callback:callback, thisArg:thisArg };
     
     for(var i = 0; i < events.length; i++){
-        if(this.after_process[events[i]]){
-            this.after_process[events[i]].push(after);
+        if(this.after_events[events[i]]){
+            this.after_events[events[i]].push(after);
         } else {
-            this.after_process[events[i]] = [after];
+            this.after_events[events[i]] = [after];
         }
     }
     
@@ -78,15 +78,15 @@ WaitingOn.prototype.after = function(process_name, callback, thisArg){
 };
 
 WaitingOn.prototype._afterEvents = function(){
-    var processes = this._after_processes;
-    var process, after, afters, i, j, k, l, p;
-    delete this._after_process;
+    var events = this._after_events;
+    var event, after, afters, i, j, k, l, p;
+    delete this._after_events;
     
-    for(i = 0; i < processes.length; i++){
-        process = processes[i];
+    for(i = 0; i < events.length; i++){
+        event = events[i];
         
-        if(process in this.after_process){
-            afters = this.after_process[process];
+        if(event in this.after_events){
+            afters = this.after_events[event];
             
             for(j = 0; j < afters.length; j++){
                 after = afters[j];
@@ -102,10 +102,10 @@ WaitingOn.prototype._afterEvents = function(){
                     
                     for(k = 0; k < after.events.length; k++){
                         p = after.events[k];
-                        if(p in this.after_process && ~(l = this.after_process[p].indexOf(after))){
-                            this.after_process[p].splice(l, 1);
-                            if(this.after_process[p].length === 0){
-                                delete this.after_process[p];
+                        if(p in this.after_events && ~(l = this.after_events[p].indexOf(after))){
+                            this.after_events[p].splice(l, 1);
+                            if(this.after_events[p].length === 0){
+                                delete this.after_events[p];
                             }
                         }
                     }
@@ -115,7 +115,7 @@ WaitingOn.prototype._afterEvents = function(){
             }
             
             if(afters.length === 0){
-                delete this.after_process[process];
+                delete this.after_events[event];
             }
         }
     }
@@ -165,41 +165,41 @@ WaitingOn.prototype.error = function(err){
     return this;
 };
 
-WaitingOn.prototype.finished = function(process_name){
+WaitingOn.prototype.finished = function(event_name){
     var waiting_on = this;
     
     if(arguments.length === 0){
         this.count--;
     } else {
-        var processes = Array.prototype.slice.call(arguments, 0);
-        var process, after_processes;
+        var events = Array.prototype.slice.call(arguments, 0);
+        var event, after_events;
         
-        while(processes.length){
-            process = processes.shift();
+        while(events.length){
+            event = events.shift();
             
-            if(this.waiting_on && process in this.waiting_on){
-                if(this.waiting_on[process] > 1){
-                    this.waiting_on[process] = this.waiting_on[process] - 1; 
+            if(this.waiting_on && event in this.waiting_on){
+                if(this.waiting_on[event] > 1){
+                    this.waiting_on[event] = this.waiting_on[event] - 1; 
                 } else {
                     // last one
-                    delete this.waiting_on[process];
+                    delete this.waiting_on[event];
                     
-                    if(this.after_process && process in this.after_process){
-                        if(!after_processes){
-                            after_processes = this._after_process || [];
+                    if(this.after_events && event in this.after_events){
+                        if(!after_events){
+                            after_events = this._after_events || [];
                         }
-                        after_processes.push(process);
+                        after_events.push(event);
                     }
                 }
             } else {
-                throw new Error('Unknown process finished. [' + process + ']');
+                throw new Error('Unknown event finished. [' + event + ']');
             }
             
             this.count--;
         }
         
-        if(after_processes && !('_after_process' in this)){
-            this._after_processes = after_processes;
+        if(after_events && !('_after_events' in this)){
+            this._after_events = after_events;
             
             setTimeout(function(){
                 waiting_on._afterEvents();
@@ -230,8 +230,8 @@ WaitingOn.prototype.holdup = function(){
     return this.count;
 };
 
-WaitingOn.prototype.process = function(process_name, callback, thisArg){
-    this.processes(process_name);
+WaitingOn.prototype.event = function(event, callback, thisArg){
+    this.events(event);
     var waiting_on = this;
     
     return function(){
@@ -243,13 +243,13 @@ WaitingOn.prototype.process = function(process_name, callback, thisArg){
             waiting_on.error(err);
         }
         
-        waiting_on.finished(process_name);
+        waiting_on.finished(event);
         
         return result;
     };
 };
 
-WaitingOn.prototype.processes = function(process_name){
+WaitingOn.prototype.events = function(event){
     if(!('count' in this)){
         throw new Error('Finally already called.');
     }
@@ -265,7 +265,7 @@ WaitingOn.prototype.processes = function(process_name){
         while(args.length){
             arg = args.shift();
             if(!arg || typeof arg !== 'string'){
-                throw new Error('Process name must be a string with one or more characters');
+                throw new Error('Event name must be a string with one or more characters');
             }
             this.waiting_on[arg] = (this.waiting_on[arg] ? this.waiting_on[arg] + 1 : 1);
             this.count++;
@@ -303,7 +303,7 @@ WaitingOn.waitingOn = function(){
         }
         
         if(args.length > 0){
-            wait.processes.apply(wait, args);
+            wait.events.apply(wait, args);
         }
     }
     
