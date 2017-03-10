@@ -1,0 +1,33 @@
+{
+  "name": "waiting-on",
+  "version": "0.0.0",
+  "description": "Wait for callbacks (or other events) to finish before executing code.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- -u exports -R spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jbsulli/waiting-on.git"
+  },
+  "keywords": [
+    "async",
+    "wait",
+    "callback",
+    "many",
+    "events"
+  ],
+  "author": "Joshua Sullivan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jbsulli/waiting-on/issues"
+  },
+  "homepage": "https://github.com/jbsulli/waiting-on#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "dirty-chai": "^1.2.2",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.2.0"
+  }
+}
