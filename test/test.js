@@ -59,7 +59,8 @@ describe('WaitingOn', function(){
         it('should not allow adding a count if finally has already been called', function(done){
             var wait = waitingOn();
             
-            wait.finally(function(){
+            wait.finally(function(errors){
+                expect(errors).to.equal(undefined);
                 expect(() => wait.add(1)).to.throw(Error, /^Finally already called\.$/);
                 done();
             });
@@ -80,7 +81,8 @@ describe('WaitingOn', function(){
             wait.after('c', () => {
                 expect(++step).to.equal(1);
             });
-            wait.finished('c','a','b').finally(() => {
+            wait.finished('c','a','b').finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(step).to.equal(3);
                 done();
             });
@@ -96,7 +98,8 @@ describe('WaitingOn', function(){
             wait.after('c', 'a', () => {
                 expect(++step).to.equal(3);
             });
-            wait.finished('a','b').finally(() => {
+            wait.finished('a','b').finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(step).to.equal(3);
                 done();
             });
@@ -112,10 +115,11 @@ describe('WaitingOn', function(){
             
             // two 'b' processes
             wait.after('a', 'b', 'b', () => {
-                expect(++step).to.equal(1);
+                step++;
             });
             
-            wait.finished('a','b').finally(() => {
+            wait.finished('a','b').finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(step).to.equal(1);
                 done();
             });
@@ -126,12 +130,13 @@ describe('WaitingOn', function(){
             var step = 0;
             
             wait.after('b', () => {
-                expect(++step).to.equal(1);
+                step++;
             });
             wait.after('c', 'a', () => {
-                expect(++step).to.equal(2);
+                step++;
             });
-            wait.finished('a','b','c').finally(() => {
+            wait.finished('a','b','c').finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(step).to.equal(2);
                 done();
             });
@@ -142,14 +147,15 @@ describe('WaitingOn', function(){
             var step = 0;
             
             wait.after('c', 'a', () => {
-                expect(++step).to.equal(1);
+                step++;
             });
             
             wait.after('c', () => {
-                expect(++step).to.equal(2);
+                step++;
             });
             
-            wait.finished('a','b','c').finally(() => {
+            wait.finished('a','b','c').finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(step).to.equal(2);
                 done();
             });
@@ -164,7 +170,8 @@ describe('WaitingOn', function(){
                 expect(this).to.equal(wait);
             }, wait);
             
-            wait.finished('a').finally(() => {
+            wait.finished('a').finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(step).to.equal(1);
                 done();
             });
@@ -180,7 +187,8 @@ describe('WaitingOn', function(){
                 expect(this).to.equal(a_function);
             }, a_function);
             
-            wait.finished('a').finally(() => {
+            wait.finished('a').finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(step).to.equal(1);
                 done();
             });
@@ -199,7 +207,8 @@ describe('WaitingOn', function(){
             var wait = waitingOn();
             expect(wait.any('a')).to.equal(false);
             wait.processes('a','b','c');
-            wait.finally(() => {
+            wait.finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(wait.any('a','b','c')).to.equal(false);
                 done();
             });
@@ -227,7 +236,8 @@ describe('WaitingOn', function(){
             
             expect(wait.holdup()).to.deep.equal(1);
             
-            wait.finally(() => {
+            wait.finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(callback_called).to.equal(true);
                 done();
             });
@@ -256,7 +266,7 @@ describe('WaitingOn', function(){
                 throw err;
             }, wait), 50);
             
-            wait.finally((errors) => {
+            wait.finally(errors => {
                 expect(errors).to.deep.equal([err]);
                 done();
             });
@@ -323,7 +333,8 @@ describe('WaitingOn', function(){
             
             expect(wait.holdup()).to.deep.equal(['timer']);
             
-            wait.finally(() => {
+            wait.finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(callback_called).to.equal(true);
                 done();
             });
@@ -338,7 +349,8 @@ describe('WaitingOn', function(){
                 expect(wait).to.equal(wait);
             }, wait), 50);
             
-            wait.finally(() => {
+            wait.finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(callback_called).to.equal(true);
                 done();
             });
@@ -352,7 +364,7 @@ describe('WaitingOn', function(){
                 throw err;
             }, wait), 50);
             
-            wait.finally((errors) => {
+            wait.finally(errors => {
                 expect(errors).to.be.an('array');
                 expect(errors).to.deep.equal([err]);
                 done();
@@ -363,7 +375,8 @@ describe('WaitingOn', function(){
     describe('.processes()', function(){
         it('should add proccesses to the wait list', function(done){
             var all_done = false;
-            var wait = waitingOn().processes('a', 'b').finally(() => {
+            var wait = waitingOn().processes('a', 'b').finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(all_done).to.equal(true);
                 done();
             });
@@ -394,7 +407,8 @@ describe('WaitingOn', function(){
         
         it('should not allow adding proccesses if finally has already been called', function(done){
             var wait = new WaitingOn();
-            wait.finally(() => {
+            wait.finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(() => wait.processes('bad')).to.throw(Error, /^Finally already called\.$/);
                 done();
             });
@@ -418,7 +432,8 @@ describe('WaitingOn', function(){
     
     describe('finally', function(){
         it('should call its callback when we are no longer waiting on anything', function(done){
-            waitingOn().finally(() => {
+            waitingOn().finally(errors => {
+                expect(errors).to.equal(undefined);
                 done();
             });
         });
@@ -429,7 +444,8 @@ describe('WaitingOn', function(){
         
         it('should use the thisArg when passed', function(done){
             var wait = new WaitingOn();
-            wait.finally(function(){
+            wait.finally(function(errors){
+                expect(errors).to.equal(undefined);
                 expect(this).to.equal(wait);
                 done();
             }, wait);
@@ -439,7 +455,8 @@ describe('WaitingOn', function(){
             var wait = waitingOn(1);
             var second_task = false;
             
-            wait.finally(() => {
+            wait.finally(errors => {
+                expect(errors).to.equal(undefined);
                 expect(second_task).to.equal(true);
                 done();
             });
@@ -451,7 +468,4 @@ describe('WaitingOn', function(){
             }), 100);
         });
     });
-    
-    it('I need an expect for all finally calls to check for errors');
-    it('I need tests for all chainable functions to solidify the expected behavior');
 });
