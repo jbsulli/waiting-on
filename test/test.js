@@ -65,6 +65,11 @@ describe('WaitingOn', function(){
                 done();
             });
         });
+        
+        it('should be chainable', function(){
+            var wait = waitingOn();
+            expect(wait.add(1)).to.equal(wait);
+        });
     });
     
     describe('.after()', function(){
@@ -200,6 +205,11 @@ describe('WaitingOn', function(){
             expect(() => waitingOn().after(function(){})).to.throw(Error, /^Missing process to wait for$/);
             expect(() => waitingOn().after(function(){}, function(){})).to.throw(Error, /^Missing process to wait for$/);
         });
+        
+        it('should be chainable', function(){
+            var wait = waitingOn();
+            expect(wait.after('test', () => {})).to.equal(wait);
+        });
     });
     
     describe('.any()', function(){
@@ -300,12 +310,22 @@ describe('WaitingOn', function(){
                 done();
             });
         });
+        
+        it('should be chainable', function(){
+            var wait = waitingOn();
+            expect(wait.error(new Error("test"))).to.equal(wait);
+        });
     });
     
     describe('.finished()', function(){
         it('should throw an error given an unknown process', function(){
             expect(() => waitingOn().finished('a')).to.throw(Error, /^Unknown process finished\. \[a\]$/);
             expect(() => waitingOn('b').finished('a')).to.throw(Error, /^Unknown process finished\. \[a\]$/);
+        });
+        
+        it('should be chainable', function(){
+            var wait = waitingOn(1);
+            expect(wait.finished()).to.equal(wait);
         });
     });
     
@@ -428,6 +448,11 @@ describe('WaitingOn', function(){
             wait.finished('a', 'a');
             expect(wait.holdup()).to.equal(0);
         });
+        
+        it('should be chainable', function(){
+            var wait = waitingOn();
+            expect(wait.processes('test')).to.equal(wait);
+        });
     });
     
     describe('finally', function(){
@@ -466,6 +491,11 @@ describe('WaitingOn', function(){
             setTimeout(wait.callback(() => {
                 second_task = true;
             }), 100);
+        });
+        
+        it('should be chainable', function(){
+            var wait = waitingOn();
+            expect(wait.finally(() => {})).to.equal(wait);
         });
     });
 });
