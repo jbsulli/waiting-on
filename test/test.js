@@ -206,6 +206,19 @@ describe('WaitingOn', function(){
             expect(() => waitingOn().after(function(){}, function(){})).to.throw(Error, /^Missing process to wait for$/);
         });
         
+        it('should catch thrown errors in the callback', function(done){
+            var err;
+            waitingOn('test')
+                .after('test', () => {
+                    throw err;
+                })
+                .finally(errors => {
+                    expect(errors).to.deep.equal([err]);
+                    done();
+                })
+                .finished('test');
+        });
+        
         it('should be chainable', function(){
             var wait = waitingOn();
             expect(wait.after('test', () => {})).to.equal(wait);
