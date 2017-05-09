@@ -93,6 +93,33 @@ describe('WaitingOn', function(){
             });
         });
         
+        it('should pass any errors to the after callbacks', function(done){
+            var wait = waitingOn('a', 'b', 'c');
+            var step = 0;
+            var err1 = new Error('Bad deal!');
+            var err2 = new Error('Not getting any better');
+            
+            wait.after('a', errors => {
+                expect(errors).to.equal(undefined);
+                expect(++step).to.equal(2);
+                wait.error(err1);
+            });
+            wait.after('b', errors => {
+                expect(errors).to.deep.equal([err1]);
+                expect(++step).to.equal(3);
+                wait.error(err2);
+            });
+            wait.after('c', errors => {
+                expect(errors).to.equal(undefined);
+                expect(++step).to.equal(1);
+            });
+            wait.finished('c','a','b').finally(errors => {
+                expect(errors).to.deep.equal([err1, err2]);
+                expect(step).to.equal(3);
+                done();
+            });
+        });
+        
         it('should be able to listen for multiple events to finish', function(done){
             var wait = waitingOn('a', 'b', 'c');
             var step = 0;
@@ -266,6 +293,22 @@ describe('WaitingOn', function(){
             });
         });
         
+        it('should work without a callback', function(done){
+            var wait = waitingOn();
+            var callback_called = false;
+            
+            setTimeout(wait.callback(), 50);
+            
+            expect(wait.holdup()).to.deep.equal(1);
+            
+            wait.finally(errors => {
+                expect(errors).to.equal(undefined);
+                done();
+            });
+            
+            callback_called = true;
+        });
+        
         it('should use the thisArg if set', function(done){
             var wait = waitingOn();
             var callback_called = false;
@@ -373,6 +416,23 @@ describe('WaitingOn', function(){
             });
         });
         
+        it('should work without a callback', function(done){
+            var wait = waitingOn();
+            var callback_called = false;
+            
+            setTimeout(wait.event('timer'), 50);
+            
+            expect(wait.holdup()).to.deep.equal(['timer']);
+            
+            wait.finally(errors => {
+                expect(errors).to.equal(undefined);
+                expect(callback_called).to.equal(true);
+                done();
+            });
+            
+            callback_called = true;
+        });
+        
         it('should use the thisArg if set', function(done){
             var wait = waitingOn();
             var callback_called = false;
@@ -400,6 +460,21 @@ describe('WaitingOn', function(){
             wait.finally(errors => {
                 expect(errors).to.be.an('array');
                 expect(errors).to.deep.equal([err]);
+                done();
+            });
+        });
+        
+        it('should allow multiple events with the same name', function(done){
+            var wait = waitingOn();
+            var i = 0;
+            
+            setTimeout(wait.event('timer', () => i += 10), 10);
+            setTimeout(wait.event('timer', () => i += 20), 20);
+            setTimeout(wait.event('timer', () => i += 30), 30);
+            setTimeout(wait.event('timer', () => i += 40), 40);
+            
+            wait.finally(() => {
+                expect(i).to.equal(100);
                 done();
             });
         });

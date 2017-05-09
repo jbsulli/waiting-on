@@ -2,7 +2,15 @@
 
 module.exports = WaitingOn;
 
-function WaitingOn(count_or_event){
+/**
+ * Construct a new instance of WaitingOn. Optionally pass the number of unnamed events as the first 
+ * argument and/or any number of event names to wait for. Use `WaitingOn.waitingOn()` for the same
+ * functionality without the need for the new operator (better for chaining).
+ * @constructor
+ * @param {number} [count] - Number of unnamed events to wait for.
+ * @param {...string} [event] - Event to wait for.
+ */
+function WaitingOn(count, event){
     this.count = 0;
     this.ready = false;
     
@@ -12,7 +20,7 @@ function WaitingOn(count_or_event){
     
     var args = Array.prototype.slice.call(arguments, 0);
     
-    if(typeof count_or_event === 'number'){
+    if(typeof count === 'number'){
         this.add(args.shift());
     }
     
@@ -93,7 +101,7 @@ WaitingOn.prototype._afterEvents = function(){
             
                 if(!this.any.apply(this, after.events)){
                     try {
-                        after.callback.call(after.thisArg);
+                        after.callback.call(after.thisArg, this.errors);
                     } catch(err){
                         this.error(err);
                     }
@@ -143,10 +151,12 @@ WaitingOn.prototype.callback = function(callback, thisArg){
     return function(){
         var result;
         
-        try {
-            result = callback.apply(thisArg, Array.prototype.slice.call(arguments, 0));
-        } catch(err){
-            waiting_on.error(err);
+        if(callback){
+            try {
+                result = callback.apply(thisArg, Array.prototype.slice.call(arguments, 0));
+            } catch(err){
+                waiting_on.error(err);
+            }
         }
         
         waiting_on.finished();
@@ -237,10 +247,12 @@ WaitingOn.prototype.event = function(event, callback, thisArg){
     return function(){
         var result;
         
-        try {
-            result = callback.apply(thisArg, Array.prototype.slice.call(arguments, 0));
-        } catch(err){
-            waiting_on.error(err);
+        if(callback){
+            try {
+                result = callback.apply(thisArg, Array.prototype.slice.call(arguments, 0));
+            } catch(err){
+                waiting_on.error(err);
+            }
         }
         
         waiting_on.finished(event);
