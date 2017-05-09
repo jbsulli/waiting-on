@@ -1,6 +1,6 @@
 {
   "name": "waiting-on",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Wait for callbacks (or other events) to finish before executing code.",
   "main": "index.js",
   "scripts": {
